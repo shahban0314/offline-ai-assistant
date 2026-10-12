@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Offline AI Assistant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #eef5ff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #1e293b;
+        }
+
+        .chat-container {
+            width: 92%;
+            max-width: 900px;
+            height: 92vh;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(21, 101, 192, 0.12);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #dbeafe;
+        }
+
+        /* ---------------- Header ---------------- */
+        .header {
+            padding: 16px 22px;
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            z-index: 10;
+        }
+
+        .header-title-group h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .header-title-group p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: #dbeafe;
+            font-weight: 400;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 13px;
+            background: #ffffff;
+            color: #1565c0;
+            text-decoration: none;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: #e3f2fd;
+            transform: translateY(-1px);
+        }
+
+        .clear-chat-btn {
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+
+        .clear-chat-btn:hover {
+            background: rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+        }
+
+        /* ---------------- Chat Box ---------------- */
+        .chat-box {
+            flex: 1;
+            padding: 22px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* ---------------- Welcome Screen ---------------- */
+        .welcome {
+            margin: auto;
+            text-align: center;
+            max-width: 580px;
+            padding: 30px 20px;
+            color: #475569;
+        }
+
+        .welcome-icon {
+            font-size: 46px;
+            margin-bottom: 12px;
+            display: inline-block;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .welcome h2 {
+            margin: 0 0 8px;
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .welcome p {
+            margin: 0 0 24px;
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .suggestions-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+            color: #1565c0;
+            margin-bottom: 12px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            text-align: left;
+        }
+
+        .suggestion-chip {
+            background: #ffffff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #1e3a8a;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            line-height: 1.4;
+            box-shadow: 0 2px 6px rgba(21, 101, 192, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .suggestion-chip:hover {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(21, 101, 192, 0.1);
+        }
+
+        /* ---------------- Messages ---------------- */
+        .message-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-row {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .ai-row {
+            align-self: flex-start;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 88%;
+        }
+
+        .message-sender {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-row .message-sender {
+            color: #1565c0;
+        }
+
+        .ai-row .message-sender {
+            color: #475569;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .message {
+            padding: 14px 18px;
+            border-radius: 14px;
+            line-height: 1.6;
+            font-size: 14.5px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .user-message {
+            background: #1565c0;
+            color: #ffffff;
+            border-bottom-right-radius: 3px;
+            box-shadow: 0 3px 12px rgba(21, 101, 192, 0.2);
+            white-space: pre-wrap;
+        }
+
+        .ai-message {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #1565c0;
+            border-bottom-left-radius: 3px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+            width: 100%;
+        }
+
+        .ai-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ---------------- Code Formatting ---------------- */
+        .code-block-wrapper {
+            margin: 14px 0;
+            border-radius: 9px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 14px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .code-lang {
+            font-weight: 600;
+            text-transform: lowercase;
+        }
+
+        .copy-code-btn {
+            background: #334155;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            border-radius: 5px;
+            padding: 4px 9px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-code-btn:hover {
+            background: #475569;
+            color: #ffffff;
+        }
+
+        .copy-code-btn.copied {
+            background: #059669;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+
+        .code-pre {
+            margin: 0;
+            padding: 14px;
+            overflow-x: auto;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: #f8fafc;
+            background: #0f172a;
+        }
+
+        .code-pre code {
+            font-family: inherit;
+            color: inherit;
+            background: transparent;
+            padding: 0;
+        }
+
+        .inline-code {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 2px 6px;
+            border-radius: 5px;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 0.9em;
+        }
+
+        /* ---------------- Message Actions & Metadata ---------------- */
+        .ai-footer {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .metadata-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .meta-chip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 11px;
+            color: #475569;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-chip strong {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .copy-response-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            color: #334155;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+        }
+
+        .copy-response-btn:hover {
+            background: #f1f5f9;
+            color: #1565c0;
+            border-color: #93c5fd;
+        }
+
+        .copy-response-btn.copied {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        /* ---------------- Loading Animation ---------------- */
+        .loading-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            border-left: 4px solid #1565c0;
+            padding: 16px 20px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .typing-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #1565c0;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator .dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-indicator .dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% {
+                transform: scale(0.6);
+                opacity: 0.35;
+            }
+            40% {
+                transform: scale(1.15);
+                opacity: 1;
+            }
+        }
+
+        .typing-text {
+            font-size: 13.5px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* ---------------- Friendly Error Card ---------------- */
+        .error-card {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            border-left: 4px solid #e11d48;
+            border-radius: 12px;
+            padding: 16px 18px;
+            color: #9f1239;
+            font-size: 14px;
+            line-height: 1.5;
+            width: 100%;
+        }
+
+        .error-card-header {
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            color: #be123c;
+        }
+
+        .error-card-tips {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #fecdd3;
+            font-size: 12.5px;
+            color: #881337;
+        }
+
+        /* ---------------- Input Area ---------------- */
+        .input-area {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .model-select-wrapper {
+            position: relative;
+        }
+
+        .input-area select {
+            padding: 12px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 500;
+            outline: none;
+            background: #f8fafc;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            height: 48px;
+        }
+
+        .input-area select:focus {
+            border-color: #1565c0;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+        }
+
+        .textarea-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-area textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-family: inherit;
+            line-height: 1.45;
+            outline: none;
+            background: #ffffff;
+            resize: none;
+            min-height: 48px;
+            max-height: 130px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            display: block;
+        }
+
+        .input-area textarea:focus {
+            border-color: #1565c0;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+        }
+
+        .input-area textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .input-area button {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 10px;
+            background: #1565c0;
+            color: white;
+            cursor: pointer;
+            font-size: 14.5px;
+            font-weight: 600;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.15s ease-in-out;
+            box-shadow: 0 2px 6px rgba(21, 101, 192, 0.25);
+            flex-shrink: 0;
+        }
+
+        .input-area button:hover:not(:disabled) {
+            background: #0d47a1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(21, 101, 192, 0.35);
+        }
+
+        .input-area button:disabled,
+        .input-area select:disabled,
+        .input-area textarea:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.75;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* ---------------- Responsive Styles ---------------- */
+        @media (max-width: 768px) {
+            body {
+                background: #ffffff;
+            }
+
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+
+            .header {
+                padding: 14px 16px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .suggestions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .message-row {
+                max-width: 95%;
+            }
+
+            .ai-row {
+                max-width: 98%;
+            }
+
+            .input-area {
+                padding: 12px 14px;
+                gap: 8px;
+            }
+
+            .input-area button {
+                padding: 12px 16px;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .input-area {
+                flex-wrap: wrap;
+            }
+
+            .model-select-wrapper {
+                width: 100%;
+            }
+
+            .input-area select {
+                width: 100%;
+            }
+
+            .textarea-wrapper {
+                width: calc(100% - 90px);
+            }
+
+            .input-area button {
+                width: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+
+        <!-- Header -->
+        <div class="header">
+
+            <div class="header-title-group">
+                <h1>🤖 Offline AI Assistant</h1>
+                <p>Private &amp; Local AI powered by Ollama</p>
+            </div>
+
+            <div class="nav-links">
+                <button type="button" class="nav-btn clear-chat-btn" onclick="clearCurrentChat()" title="Clear messages from current screen">
+                    🧹 Clear Chat
+                </button>
+                <a href="/history-page" class="nav-btn">
+                    🕘 Chat History
+                </a>
+                <a href="/benchmark" class="nav-btn">
+                    📊 Benchmark
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Chat Box -->
+        <div class="chat-box" id="chatBox">
+
+            <div class="welcome" id="welcome">
+                <div class="welcome-icon">👋</div>
+                <h2>How can I help you today?</h2>
+                <p>
+                    Ask any question, generate code, or explore ideas. Your AI runs 100% offline and locally on your computer.
+                </p>
+
+                <div class="suggestions-title">💡 Suggested Prompts</div>
+                <div class="suggestions-grid">
+                    <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                        🐍 Write a Python function to check for prime numbers
+                    </button>
+                    <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                        💻 What is the difference between CPU and GPU?
+                    </button>
+                    <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                        ⚡ Explain recursion with a simple example
+                    </button>
+                    <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                        🔒 Why run AI locally instead of the cloud?
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+
+            <div class="model-select-wrapper">
+                <select id="model" title="Select AI Model">
+                    <option value="phi3">
+                        Phi-3
+                    </option>
+                    <option value="llama3.2:3b">
+                        Llama 3.2 3B
+                    </option>
+                </select>
+            </div>
+
+            <div class="textarea-wrapper">
+                <textarea
+                    id="message"
+                    rows="1"
+                    placeholder="Ask something... (Enter to send, Shift+Enter for newline)"
+                    autocomplete="off"
+                ></textarea>
+            </div>
+
+            <button type="button" id="sendBtn" onclick="sendMessage()">
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        let isSending = false;
+
+        // Auto-expand textarea height as user types
+        const messageInput = document.getElementById("message");
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = "auto";
+            const newHeight = Math.min(textarea.scrollHeight, 130);
+            textarea.style.height = (newHeight > 48 ? newHeight : 48) + "px";
+        }
+
+        messageInput.addEventListener("input", function () {
+            autoResizeTextarea(this);
+        });
+
+        // HTML escaping utility to prevent XSS
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Lightweight Markdown & Code Block Formatter
+        function formatAiContent(raw) {
+            if (!raw) return "";
+
+            // 1. Extract fenced code blocks first
+            const codeBlocks = [];
+            let text = raw.replace(/```([a-zA-Z0-9_\-\.\+]*)\r?\n([\s\S]*?)```/g, function (match, lang, code) {
+                const id = '___CODEBLOCK_' + codeBlocks.length + '___';
+                codeBlocks.push({
+                    lang: (lang || 'code').trim(),
+                    code: code.replace(/\r?\n$/, '')
+                });
+                return id;
+            });
+
+            // 2. Escape HTML on prose
+            text = escapeHtml(text);
+
+            // 3. Inline code `code`
+            text = text.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
+            // 4. Bold **text**
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+            // 5. Italic *text*
+            text = text.replace(/(^|[^\*])\*([^\*]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
+
+            // 6. Restore code blocks with language header and Copy Code button
+            codeBlocks.forEach(function (item, index) {
+                const placeholder = '___CODEBLOCK_' + index + '___';
+                const cleanLang = escapeHtml(item.lang);
+                const cleanCode = escapeHtml(item.code);
+                const blockHtml =
+                    '<div class="code-block-wrapper">' +
+                        '<div class="code-block-header">' +
+                            '<span class="code-lang">' + cleanLang + '</span>' +
+                            '<button type="button" class="copy-code-btn" onclick="copyCodeBlock(this)">📋 Copy Code</button>' +
+                        '</div>' +
+                        '<pre class="code-pre"><code>' + cleanCode + '</code></pre>' +
+                    '</div>';
+                text = text.replace(placeholder, blockHtml);
+            });
+
+            return text;
+        }
+
+        // Copy entire AI Response
+        async function copyResponse(btn, rawText) {
+            try {
+                await navigator.clipboard.writeText(rawText);
+                const orig = btn.innerHTML;
+                btn.innerHTML = "✅ Copied!";
+                btn.classList.add("copied");
+                setTimeout(function () {
+                    btn.innerHTML = orig;
+                    btn.classList.remove("copied");
+                }, 2000);
+            } catch (err) {
+                // Fallback for restricted clipboard context
+                fallbackCopy(rawText, btn, "✅ Copied!");
+            }
+        }
+
+        // Copy specific code block
+        async function copyCodeBlock(btn) {
+            const wrapper = btn.closest(".code-block-wrapper");
+            if (!wrapper) return;
+            const codeEl = wrapper.querySelector("code");
+            const codeText = codeEl ? codeEl.innerText : "";
+
+            try {
+                await navigator.clipboard.writeText(codeText);
+                const orig = btn.innerHTML;
+                btn.innerHTML = "✅ Copied!";
+                btn.classList.add("copied");
+                setTimeout(function () {
+                    btn.innerHTML = orig;
+                    btn.classList.remove("copied");
+                }, 2000);
+            } catch (err) {
+                fallbackCopy(codeText, btn, "✅ Copied!");
+            }
+        }
+
+        // Clipboard fallback helper
+        function fallbackCopy(text, btn, successLabel) {
+            const temp = document.createElement("textarea");
+            temp.value = text;
+            temp.style.position = "fixed";
+            temp.style.left = "-9999px";
+            document.body.appendChild(temp);
+            temp.focus();
+            temp.select();
+            try {
+                document.execCommand("copy");
+                const orig = btn.innerHTML;
+                btn.innerHTML = successLabel;
+                btn.classList.add("copied");
+                setTimeout(function () {
+                    btn.innerHTML = orig;
+                    btn.classList.remove("copied");
+                }, 2000);
+            } catch (e) {
+                alert("Could not copy text to clipboard.");
+            }
+            document.body.removeChild(temp);
+        }
+
+        // Click on suggestion chip
+        function useSuggestion(btn) {
+            const text = btn.innerText.replace(/^[^\w\s]+\s*/, '').trim();
+            messageInput.value = text;
+            autoResizeTextarea(messageInput);
+            messageInput.focus();
+        }
+
+        // Clear Current Chat screen (does NOT delete DB history)
+        function clearCurrentChat() {
+            const chatBox = document.getElementById("chatBox");
+            const messageRows = chatBox.querySelectorAll(".message-row");
+
+            if (messageRows.length === 0) {
+                return;
+            }
+
+            const confirmed = confirm(
+                "Clear the current conversation from the screen?\n\n(Note: Your saved chat history in the database will NOT be deleted.)"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            chatBox.innerHTML = `
+                <div class="welcome" id="welcome">
+                    <div class="welcome-icon">👋</div>
+                    <h2>How can I help you today?</h2>
+                    <p>
+                        Ask any question, generate code, or explore ideas. Your AI runs 100% offline and locally on your computer.
+                    </p>
+
+                    <div class="suggestions-title">💡 Suggested Prompts</div>
+                    <div class="suggestions-grid">
+                        <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                            🐍 Write a Python function to check for prime numbers
+                        </button>
+                        <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                            💻 What is the difference between CPU and GPU?
+                        </button>
+                        <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                            ⚡ Explain recursion with a simple example
+                        </button>
+                        <button type="button" class="suggestion-chip" onclick="useSuggestion(this)">
+                            🔒 Why run AI locally instead of the cloud?
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            messageInput.value = "";
+            autoResizeTextarea(messageInput);
+            messageInput.focus();
+        }
+
+        // Friendly error tips based on error content
+        function getErrorTip(message, model) {
+            const lower = (message || "").toLowerCase();
+            if (lower.includes("could not connect") || lower.includes("connection")) {
+                return "💡 <strong>Tip:</strong> Ollama does not seem to be running. Open terminal and run <code>ollama serve</code>, then try again.";
+            }
+            if (lower.includes("timed out") || lower.includes("timeout")) {
+                return "💡 <strong>Tip:</strong> The request timed out. Local models take longer during the first run while loading into memory.";
+            }
+            if (lower.includes("check whether the selected model is installed") || lower.includes("404")) {
+                return "💡 <strong>Tip:</strong> Model <code>" + escapeHtml(model) + "</code> may not be downloaded. Run <code>ollama pull " + escapeHtml(model) + "</code> in your terminal.";
+            }
+            return "💡 <strong>Tip:</strong> Ensure Ollama is running and your computer has sufficient memory available.";
+        }
+
+        // Main Send Function
+        async function sendMessage() {
+            if (isSending) {
+                return;
+            }
+
+            const input = document.getElementById("message");
+            const chatBox = document.getElementById("chatBox");
+            const modelSelect = document.getElementById("model");
+            const sendButton = document.getElementById("sendBtn");
+
+            const message = input.value.trim();
+
+            if (!message) {
+                input.focus();
+                input.placeholder = "Please enter a message first...";
+                return;
+            }
+
+            isSending = true;
+
+            // Disable controls
+            sendButton.disabled = true;
+            sendButton.innerText = "Generating...";
+            input.disabled = true;
+            modelSelect.disabled = true;
+
+            // Remove welcome screen if present
+            const welcome = document.getElementById("welcome");
+            if (welcome) {
+                welcome.remove();
+            }
+
+            // Append User Message
+            const userRow = document.createElement("div");
+            userRow.className = "message-row user-row";
+            userRow.innerHTML = `
+                <div class="message-sender">👤 You</div>
+                <div class="message user-message">${escapeHtml(message)}</div>
+            `;
+            chatBox.appendChild(userRow);
+
+            // Reset textarea
+            input.value = "";
+            autoResizeTextarea(input);
+
+            // Append Loading Indicator
+            const loadingRow = document.createElement("div");
+            loadingRow.className = "message-row ai-row loading-row";
+            const selectedModelName = modelSelect.options[modelSelect.selectedIndex]?.text || modelSelect.value;
+            loadingRow.innerHTML = `
+                <div class="message-sender">
+                    <span>🤖 Assistant</span>
+                </div>
+                <div class="message ai-message loading-message">
+                    <div class="typing-indicator">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <span class="typing-text">Thinking with ${escapeHtml(selectedModelName)}...</span>
+                </div>
+            `;
+            chatBox.appendChild(loadingRow);
+
+            chatBox.scrollTo({
+                top: chatBox.scrollHeight,
+                behavior: "smooth"
+            });
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: modelSelect.value
+                    })
+                });
+
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = {};
+                }
+
+                if (!response.ok) {
+                    const errorMsg =
+                        (typeof data.error === "string" && data.error) ||
+                        data.response ||
+                        data.message ||
+                        `Server error (${response.status})`;
+                    throw new Error(errorMsg);
+                }
+
+                if (data.error) {
+                    const errorMsg =
+                        (typeof data.error === "string" && data.error) ||
+                        data.response ||
+                        data.message ||
+                        "An unexpected error occurred.";
+                    throw new Error(errorMsg);
+                }
+
+                if (!data.response) {
+                    throw new Error("AI returned an empty response.");
+                }
+
+                // Render successful AI response
+                const rawResponse = data.response;
+                const formattedHtml = formatAiContent(rawResponse);
+                const displayModel = data.model === "llama3.2:3b" ? "Llama 3.2 3B" : (data.model === "phi3" ? "Phi-3" : data.model || selectedModelName);
+                const responseTimeText = data.response_time !== undefined && data.response_time !== null ? data.response_time + "s" : "N/A";
+
+                let chipsHtml = `
+                    <span class="meta-chip">🤖 Model: <strong>${escapeHtml(displayModel)}</strong></span>
+                    <span class="meta-chip">⏱️ Time: <strong>${escapeHtml(responseTimeText)}</strong></span>
+                `;
+
+                if (data.token_count !== undefined && data.token_count !== null && Number(data.token_count) > 0) {
+                    chipsHtml += `<span class="meta-chip">🔢 Tokens: <strong>${Number(data.token_count)}</strong></span>`;
+                }
+
+                if (data.quality_score !== undefined && data.quality_score !== null) {
+                    chipsHtml += `<span class="meta-chip" title="Rule-based heuristic score">⭐ Quality: <strong>${Number(data.quality_score)} / 100 (Heuristic)</strong></span>`;
+                }
+
+                loadingRow.className = "message-row ai-row";
+                loadingRow.innerHTML = `
+                    <div class="message-sender">
+                        <span>🤖 Assistant</span>
+                    </div>
+                    <div class="message ai-message">
+                        <div class="ai-content">${formattedHtml}</div>
+                        <div class="ai-footer">
+                            <div class="metadata-chips">
+                                ${chipsHtml}
+                            </div>
+                            <button type="button" class="copy-response-btn" onclick="copyResponse(this, this.closest('.ai-message').getAttribute('data-raw-text'))">
+                                📋 Copy Response
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Attach raw text to DOM element safely for copy button
+                loadingRow.querySelector(".ai-message").setAttribute("data-raw-text", rawResponse);
+
+            } catch (error) {
+                // Render friendly error card
+                const errMsg = error.message || "Could not connect to AI.";
+                const tipHtml = getErrorTip(errMsg, modelSelect.value);
+
+                loadingRow.className = "message-row ai-row";
+                loadingRow.innerHTML = `
+                    <div class="message-sender">
+                        <span>🤖 Assistant</span>
+                    </div>
+                    <div class="error-card">
+                        <div class="error-card-header">
+                            ⚠️ Request Failed
+                        </div>
+                        <div class="error-card-body">
+                            ${escapeHtml(errMsg)}
+                        </div>
+                        <div class="error-card-tips">
+                            ${tipHtml}
+                        </div>
+                    </div>
+                `;
+            } finally {
+                isSending = false;
+                sendButton.disabled = false;
+                sendButton.innerText = "Send";
+                input.disabled = false;
+                modelSelect.disabled = false;
+                input.focus();
+
+                chatBox.scrollTo({
+                    top: chatBox.scrollHeight,
+                    behavior: "smooth"
+                });
+            }
+        }
+
+        // Keyboard Enter to send, Shift+Enter for new line
+        messageInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>

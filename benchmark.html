@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Benchmark Dashboard - Offline AI Assistant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 24px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: auto;
+        }
+
+        /* ---------------- Header ---------------- */
+        .header {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+            padding: 22px 26px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(21, 101, 192, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: #dbeafe;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 15px;
+            background: white;
+            color: #1565c0;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: #e3f2fd;
+            transform: translateY(-1px);
+        }
+
+        /* ---------------- Heuristic Notice ---------------- */
+        .heuristic-notice {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 5px solid #1565c0;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #1e3a8a;
+            line-height: 1.55;
+            box-shadow: 0 2px 8px rgba(21, 101, 192, 0.05);
+        }
+
+        .heuristic-notice strong {
+            color: #0c4a6e;
+        }
+
+        /* ---------------- Summary Cards ---------------- */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.15s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header-phi {
+            border-bottom: 3px solid #1565c0;
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+        }
+
+        .card-header-llama {
+            border-bottom: 3px solid #7c3aed;
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header-phi h2 {
+            color: #1565c0;
+        }
+
+        .card-header-llama h2 {
+            color: #7c3aed;
+        }
+
+        .metric-block {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .metric-block:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #64748b;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+        }
+
+        .stat-sample {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* ---------------- Charts ---------------- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+            margin-bottom: 28px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .chart-container h2 {
+            margin: 0 0 6px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-subtitle {
+            margin: 0 0 16px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        canvas {
+            max-height: 280px;
+            width: 100% !important;
+        }
+
+        /* ---------------- Empty State ---------------- */
+        .empty-banner {
+            background: white;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 50px 20px;
+            text-align: center;
+            color: #64748b;
+            margin-top: 30px;
+        }
+
+        .empty-banner h3 {
+            margin: 0 0 8px;
+            color: #0f172a;
+            font-size: 20px;
+        }
+
+        .empty-banner p {
+            margin: 0 0 20px;
+            font-size: 14px;
+        }
+
+        /* ---------------- Responsive Styles ---------------- */
+        @media (max-width: 820px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Navigation Header -->
+    <div class="header">
+        <div class="header-title">
+            <h1>📊 AI Model Benchmark Dashboard</h1>
+            <p>Empirical metrics calculated from verified offline model response records</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/" class="nav-btn">
+                🏠 Chat
+            </a>
+            <a href="/history-page" class="nav-btn">
+                🕘 Chat History
+            </a>
+        </div>
+    </div>
+
+    <!-- Heuristic Quality Score Notice -->
+    <div class="heuristic-notice">
+        <strong>ℹ️ Notice on Heuristic Quality Score:</strong> The quality score reported below is a rule-based <strong>heuristic</strong> (scored from 0 to 100) estimated from prompt keyword overlap, response length appropriateness, and absence of error indicators. <em>It does not measure true AI factual correctness, reasoning truthfulness, or knowledge accuracy.</em>
+    </div>
+
+    <!-- Main Content Container -->
+    <div id="benchmarkContent">
+
+        <!-- ========================= -->
+        <!-- MODEL STATISTICS CARDS    -->
+        <!-- ========================= -->
+        <div class="cards">
+
+            <!-- PHI-3 CARD -->
+            <div class="card">
+                <div class="card-header-phi">
+                    <h2>🤖 Phi-3</h2>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Total Responses</span>
+                    </div>
+                    <div class="stat" id="phiCount">0</div>
+                    <span class="stat-sample" id="phiCountSample">Total conversations recorded</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Response Time</span>
+                    </div>
+                    <div class="stat" id="phiTime">0 sec</div>
+                    <span class="stat-sample" id="phiTimeSample">Excluding missing records</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Response Length</span>
+                    </div>
+                    <div class="stat" id="phiLength">0 chars</div>
+                    <span class="stat-sample" id="phiLengthSample">Excluding missing records</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Token Count</span>
+                    </div>
+                    <div class="stat" id="phiTokens">0 tokens</div>
+                    <span class="stat-sample" id="phiTokensSample">Calculated from valid measured tokens</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Heuristic Quality Score</span>
+                    </div>
+                    <div class="stat" id="phiQuality">0</div>
+                    <span class="stat-sample" id="phiQualitySample">Heuristic estimation (0-100)</span>
+                </div>
+            </div>
+
+            <!-- LLAMA 3.2 3B CARD -->
+            <div class="card">
+                <div class="card-header-llama">
+                    <h2>🦙 Llama 3.2 3B</h2>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Total Responses</span>
+                    </div>
+                    <div class="stat" id="llamaCount">0</div>
+                    <span class="stat-sample" id="llamaCountSample">Total conversations recorded</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Response Time</span>
+                    </div>
+                    <div class="stat" id="llamaTime">0 sec</div>
+                    <span class="stat-sample" id="llamaTimeSample">Excluding missing records</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Response Length</span>
+                    </div>
+                    <div class="stat" id="llamaLength">0 chars</div>
+                    <span class="stat-sample" id="llamaLengthSample">Excluding missing records</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Token Count</span>
+                    </div>
+                    <div class="stat" id="llamaTokens">0 tokens</div>
+                    <span class="stat-sample" id="llamaTokensSample">Calculated from valid measured tokens</span>
+                </div>
+
+                <div class="metric-block">
+                    <div class="metric-label">
+                        <span>Average Heuristic Quality Score</span>
+                    </div>
+                    <div class="stat" id="llamaQuality">0</div>
+                    <span class="stat-sample" id="llamaQualitySample">Heuristic estimation (0-100)</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- COMPARISON CHARTS         -->
+        <!-- ========================= -->
+        <div class="charts-grid">
+
+            <!-- Response Time Chart -->
+            <div class="chart-container">
+                <h2>⚡ Response Time Comparison</h2>
+                <div class="chart-subtitle">Lower is faster (average seconds per response)</div>
+                <canvas id="timeChart"></canvas>
+            </div>
+
+            <!-- Response Length Chart -->
+            <div class="chart-container">
+                <h2>📏 Response Length Comparison</h2>
+                <div class="chart-subtitle">Average character count across responses</div>
+                <canvas id="lengthChart"></canvas>
+            </div>
+
+            <!-- Token Count Chart -->
+            <div class="chart-container">
+                <h2>🔢 Token Usage Comparison</h2>
+                <div class="chart-subtitle">Average tokens per response (excluding legacy unmetered chats)</div>
+                <canvas id="tokenChart"></canvas>
+            </div>
+
+            <!-- Heuristic Quality Score Chart -->
+            <div class="chart-container">
+                <h2>⭐ Heuristic Quality Score Comparison</h2>
+                <div class="chart-subtitle">Heuristic prompt-matching score (0-100, not accuracy)</div>
+                <canvas id="qualityChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Local Chart.js -->
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+
+<script>
+
+// Robust calculation helper that safely excludes null, undefined, empty, NaN, and 0 for tokens
+function computeSafeMetric(chatList, metricKey) {
+    const valid = chatList.filter(chat => {
+        const val = chat[metricKey];
+        if (val === null || val === undefined || val === "") return false;
+        const num = Number(val);
+        if (isNaN(num)) return false;
+        // For tokens, exclude legacy 0 defaults
+        if (metricKey === "token_count" && num <= 0) return false;
+        return true;
+    });
+
+    if (valid.length === 0) {
+        return {
+            avg: 0,
+            count: 0,
+            hasData: false
+        };
+    }
+
+    const sum = valid.reduce((acc, chat) => acc + Number(chat[metricKey]), 0);
+    return {
+        avg: sum / valid.length,
+        count: valid.length,
+        hasData: true
+    };
+}
+
+async function loadBenchmark() {
+    try {
+        const response = await fetch("/history");
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        const chats = await response.json();
+
+        if (!Array.isArray(chats) || chats.length === 0) {
+            document.getElementById("benchmarkContent").innerHTML = `
+                <div class="empty-banner">
+                    <div style="font-size: 42px; margin-bottom: 12px;">📊</div>
+                    <h3>No benchmark data available yet</h3>
+                    <p>There are currently no recorded chats in the database. Start chatting to automatically build performance benchmarks!</p>
+                    <a href="/" class="nav-btn" style="background: #1565c0; color: white;">Start Chatting</a>
+                </div>
+            `;
+            return;
+        }
+
+        // Filter models
+        const phiChats = chats.filter(c => (c.model || "").toLowerCase().includes("phi"));
+        const llamaChats = chats.filter(c => (c.model || "").toLowerCase().includes("llama"));
+
+        // Counts
+        document.getElementById("phiCount").innerText = phiChats.length;
+        document.getElementById("llamaCount").innerText = llamaChats.length;
+
+        document.getElementById("phiCountSample").innerText = `Total responses: ${phiChats.length}`;
+        document.getElementById("llamaCountSample").innerText = `Total responses: ${llamaChats.length}`;
+
+        // Compute metrics with sample counts
+        const phiTime = computeSafeMetric(phiChats, "response_time");
+        const phiLength = computeSafeMetric(phiChats, "response_length");
+        const phiTokens = computeSafeMetric(phiChats, "token_count");
+        const phiQuality = computeSafeMetric(phiChats, "quality_score");
+
+        const llamaTime = computeSafeMetric(llamaChats, "response_time");
+        const llamaLength = computeSafeMetric(llamaChats, "response_length");
+        const llamaTokens = computeSafeMetric(llamaChats, "token_count");
+        const llamaQuality = computeSafeMetric(llamaChats, "quality_score");
+
+        // Populate Phi-3 Stats
+        document.getElementById("phiTime").innerText = phiTime.hasData ? phiTime.avg.toFixed(2) + " sec" : "N/A";
+        document.getElementById("phiTimeSample").innerText = `Based on ${phiTime.count} valid runs`;
+
+        document.getElementById("phiLength").innerText = phiLength.hasData ? phiLength.avg.toFixed(0) + " chars" : "N/A";
+        document.getElementById("phiLengthSample").innerText = `Based on ${phiLength.count} valid responses`;
+
+        document.getElementById("phiTokens").innerText = phiTokens.hasData ? phiTokens.avg.toFixed(0) + " tokens" : "N/A";
+        document.getElementById("phiTokensSample").innerText = `Based on ${phiTokens.count} metered responses`;
+
+        document.getElementById("phiQuality").innerText = phiQuality.hasData ? phiQuality.avg.toFixed(1) + " / 100" : "N/A";
+        document.getElementById("phiQualitySample").innerText = `Based on ${phiQuality.count} scored responses`;
+
+        // Populate Llama Stats
+        document.getElementById("llamaTime").innerText = llamaTime.hasData ? llamaTime.avg.toFixed(2) + " sec" : "N/A";
+        document.getElementById("llamaTimeSample").innerText = `Based on ${llamaTime.count} valid runs`;
+
+        document.getElementById("llamaLength").innerText = llamaLength.hasData ? llamaLength.avg.toFixed(0) + " chars" : "N/A";
+        document.getElementById("llamaLengthSample").innerText = `Based on ${llamaLength.count} valid responses`;
+
+        document.getElementById("llamaTokens").innerText = llamaTokens.hasData ? llamaTokens.avg.toFixed(0) + " tokens" : "N/A";
+        document.getElementById("llamaTokensSample").innerText = `Based on ${llamaTokens.count} metered responses`;
+
+        document.getElementById("llamaQuality").innerText = llamaQuality.hasData ? llamaQuality.avg.toFixed(1) + " / 100" : "N/A";
+        document.getElementById("llamaQualitySample").innerText = `Based on ${llamaQuality.count} scored responses`;
+
+        // Initialize Chart.js Bar Charts
+        const modelLabels = ["Phi-3", "Llama 3.2 3B"];
+        const barColors = ["#1565c0", "#7c3aed"];
+        const barHoverColors = ["#0d47a1", "#6d28d9"];
+
+        // 1. Response Time Chart
+        new Chart(document.getElementById("timeChart"), {
+            type: "bar",
+            data: {
+                labels: modelLabels,
+                datasets: [{
+                    label: "Average Response Time (sec)",
+                    data: [phiTime.avg, llamaTime.avg],
+                    backgroundColor: barColors,
+                    hoverBackgroundColor: barHoverColors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Seconds"
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Response Length Chart
+        new Chart(document.getElementById("lengthChart"), {
+            type: "bar",
+            data: {
+                labels: modelLabels,
+                datasets: [{
+                    label: "Average Response Length (chars)",
+                    data: [phiLength.avg, llamaLength.avg],
+                    backgroundColor: barColors,
+                    hoverBackgroundColor: barHoverColors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Characters"
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Token Chart
+        new Chart(document.getElementById("tokenChart"), {
+            type: "bar",
+            data: {
+                labels: modelLabels,
+                datasets: [{
+                    label: "Average Token Count",
+                    data: [phiTokens.avg, llamaTokens.avg],
+                    backgroundColor: barColors,
+                    hoverBackgroundColor: barHoverColors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Tokens"
+                        }
+                    }
+                }
+            }
+        });
+
+        // 4. Heuristic Quality Score Chart
+        new Chart(document.getElementById("qualityChart"), {
+            type: "bar",
+            data: {
+                labels: modelLabels,
+                datasets: [{
+                    label: "Average Heuristic Quality Score",
+                    data: [phiQuality.avg, llamaQuality.avg],
+                    backgroundColor: barColors,
+                    hoverBackgroundColor: barHoverColors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: "Score (0 - 100)"
+                        }
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Benchmark loading error:", error);
+        document.getElementById("benchmarkContent").innerHTML = `
+            <div class="empty-banner">
+                <div style="font-size: 42px; margin-bottom: 12px;">⚠️</div>
+                <h3>Failed to load benchmark data</h3>
+                <p>Could not connect to the database API. Please ensure the backend is running.</p>
+            </div>
+        `;
+    }
+}
+
+// Load Benchmark
+loadBenchmark();
+
+</script>
+
+</body>
+</html>

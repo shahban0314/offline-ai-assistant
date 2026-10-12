@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chat History - Offline AI Assistant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #eef5ff;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 960px;
+            margin: 30px auto 60px;
+        }
+
+        /* ---------------- Header ---------------- */
+        .header {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+            padding: 22px 26px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(21, 101, 192, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: #dbeafe;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 15px;
+            background: white;
+            color: #1565c0;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: #e3f2fd;
+            transform: translateY(-1px);
+        }
+
+        /* ---------------- Controls & Filter Bar ---------------- */
+        .filter-panel {
+            background: white;
+            padding: 18px 22px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #dbeafe;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box-wrapper {
+            flex: 1;
+            min-width: 240px;
+            position: relative;
+        }
+
+        .search-box-wrapper input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+            color: #1e293b;
+            transition: all 0.15s ease;
+        }
+
+        .search-box-wrapper input:focus {
+            border-color: #1565c0;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
+        }
+
+        .filter-select {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+            background: #f8fafc;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-select:focus {
+            border-color: #1565c0;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
+        }
+
+        .filter-stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12.5px;
+            color: #64748b;
+            padding-top: 6px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .reset-filter-btn {
+            background: none;
+            border: none;
+            color: #1565c0;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .reset-filter-btn:hover {
+            color: #0d47a1;
+        }
+
+        /* ---------------- Chat Cards ---------------- */
+        .chat-card {
+            background: white;
+            padding: 22px;
+            margin-bottom: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .chat-card:hover {
+            box-shadow: 0 6px 18px rgba(21, 101, 192, 0.08);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .model-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .model-phi3 {
+            background: #dbeafe;
+            color: #1565c0;
+            border: 1px solid #bfdbfe;
+        }
+
+        .model-llama {
+            background: #ede9fe;
+            color: #5b21b6;
+            border: 1px solid #ddd6fe;
+        }
+
+        .model-na {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .time-badge {
+            font-size: 12px;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Distinction between User Prompt and AI Response */
+        .prompt-container {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 9px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+        }
+
+        .prompt-header {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1e40af;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .prompt-text {
+            color: #1e3a8a;
+            font-size: 14.5px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-weight: 500;
+        }
+
+        .response-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #1565c0;
+            border-radius: 9px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .response-header {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-text {
+            color: #1e293b;
+            line-height: 1.6;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .copy-card-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 3px 8px;
+            font-size: 11px;
+            color: #334155;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .copy-card-btn:hover {
+            background: #f1f5f9;
+            color: #1565c0;
+            border-color: #93c5fd;
+        }
+
+        .copy-card-btn.copied {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        /* Code block styling in history */
+        .code-block-wrapper {
+            margin: 10px 0;
+            border-radius: 7px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 1px solid #334155;
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 12px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .code-pre {
+            margin: 0;
+            padding: 12px;
+            overflow-x: auto;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 13px;
+            line-height: 1.45;
+            color: #f8fafc;
+        }
+
+        .inline-code {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+        }
+
+        /* Metadata row */
+        .metadata-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .meta-chip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 4px 9px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .meta-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .meta-val {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .meta-na {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .card-actions {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .delete-btn {
+            padding: 7px 13px;
+            border: 1px solid #fecdd3;
+            border-radius: 6px;
+            background: #fff1f2;
+            color: #be123c;
+            cursor: pointer;
+            font-size: 12.5px;
+            font-weight: 600;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .delete-btn:hover {
+            background: #e11d48;
+            color: white;
+            border-color: #e11d48;
+        }
+
+        /* Empty states */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+            color: #64748b;
+            margin-top: 20px;
+        }
+
+        .empty-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 8px;
+            color: #1e293b;
+            font-size: 18px;
+        }
+
+        .empty-state p {
+            margin: 0 0 18px;
+            font-size: 14px;
+        }
+
+        /* ---------------- Responsive Styles ---------------- */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                margin: 20px auto 40px;
+            }
+
+            .header {
+                padding: 16px 18px;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .search-box-wrapper {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">
+            <h1>🕘 Chat History</h1>
+            <p>Filter, search, and manage stored conversations</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/" class="nav-btn">
+                🏠 Chat
+            </a>
+            <a href="/benchmark" class="nav-btn">
+                📊 Benchmark
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter and Search Toolbar -->
+    <div class="filter-panel">
+        <div class="filter-row">
+            <div class="search-box-wrapper">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="🔍 Search prompts or responses..."
+                    oninput="handleFilterChange()"
+                    autocomplete="off"
+                >
+            </div>
+
+            <select id="modelFilter" class="filter-select" onchange="handleFilterChange()">
+                <option value="all">All Models</option>
+                <option value="phi3">🤖 Phi-3</option>
+                <option value="llama3.2:3b">🦙 Llama 3.2 3B</option>
+                <option value="other">⚙️ Legacy / Other</option>
+            </select>
+
+            <select id="sortOrder" class="filter-select" onchange="handleFilterChange()">
+                <option value="newest">🕒 Newest First</option>
+                <option value="oldest">⏳ Oldest First</option>
+            </select>
+        </div>
+
+        <div class="filter-stats-row">
+            <div>
+                Showing <strong id="displayedCount" style="color: #0f172a;">0</strong> of <span id="totalCount">0</span> conversations
+            </div>
+            <button type="button" class="reset-filter-btn" id="resetBtn" onclick="resetFilters()">
+                Reset Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat History List Container -->
+    <div id="history"></div>
+
+</div>
+
+
+<script>
+
+let allChats = [];
+
+// Escape HTML utility
+function escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Lightweight code formatter for history cards
+function formatResponseText(raw) {
+    if (!raw) return "";
+
+    const codeBlocks = [];
+    let text = raw.replace(/```([a-zA-Z0-9_\-\.\+]*)\r?\n([\s\S]*?)```/g, function (match, lang, code) {
+        const id = '___CODEBLOCK_' + codeBlocks.length + '___';
+        codeBlocks.push({
+            lang: (lang || 'code').trim(),
+            code: code.replace(/\r?\n$/, '')
+        });
+        return id;
+    });
+
+    text = escapeHtml(text);
+    text = text.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
+    codeBlocks.forEach(function (item, index) {
+        const placeholder = '___CODEBLOCK_' + index + '___';
+        const blockHtml = `
+            <div class="code-block-wrapper">
+                <div class="code-block-header">
+                    <span>${escapeHtml(item.lang)}</span>
+                    <button type="button" class="copy-card-btn" onclick="copySnippet(this)">📋 Copy Code</button>
+                </div>
+                <pre class="code-pre"><code>${escapeHtml(item.code)}</code></pre>
+            </div>
+        `.trim();
+        text = text.replace(placeholder, blockHtml);
+    });
+
+    return text;
+}
+
+// Value formatter with N/A handling
+function formatMetric(val, suffix = "") {
+    if (val === null || val === undefined || val === "" || isNaN(Number(val))) {
+        return '<span class="meta-na">N/A</span>';
+    }
+    return `${escapeHtml(String(val))}${suffix}`;
+}
+
+// Token count formatter (excludes <= 0 legacy defaults)
+function formatTokens(val) {
+    if (val === null || val === undefined || val === "" || isNaN(Number(val)) || Number(val) <= 0) {
+        return '<span class="meta-na">N/A</span>';
+    }
+    return `${Number(val)} tokens`;
+}
+
+// Quality score formatter
+function formatQuality(val) {
+    if (val === null || val === undefined || val === "" || isNaN(Number(val))) {
+        return '<span class="meta-na">N/A</span>';
+    }
+    return `${Number(val)} / 100`;
+}
+
+// Copy AI response
+async function copyText(btn, text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.innerHTML;
+        btn.innerHTML = "✅ Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.remove("copied");
+        }, 2000);
+    } catch (e) {
+        fallbackCopy(text, btn);
+    }
+}
+
+function copySnippet(btn) {
+    const code = btn.closest(".code-block-wrapper")?.querySelector("code")?.innerText || "";
+    copyText(btn, code);
+}
+
+function fallbackCopy(text, btn) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.focus();
+    temp.select();
+    try {
+        document.execCommand("copy");
+        const orig = btn.innerHTML;
+        btn.innerHTML = "✅ Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.remove("copied");
+        }, 2000);
+    } catch (err) {
+        alert("Unable to copy to clipboard.");
+    }
+    document.body.removeChild(temp);
+}
+
+// Load history from API
+async function loadHistory() {
+    const historyBox = document.getElementById("history");
+
+    try {
+        const response = await fetch("/history");
+
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        allChats = await response.json();
+
+        if (!Array.isArray(allChats)) {
+            allChats = [];
+        }
+
+        document.getElementById("totalCount").innerText = allChats.length;
+
+        renderFilteredChats();
+
+    } catch (error) {
+        historyBox.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">⚠️</div>
+                <h3>Could not load chat history</h3>
+                <p>Failed to connect to the backend server. Please refresh or check application status.</p>
+            </div>
+        `;
+    }
+}
+
+// Filter and render chats
+function handleFilterChange() {
+    renderFilteredChats();
+}
+
+function resetFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("modelFilter").value = "all";
+    document.getElementById("sortOrder").value = "newest";
+    renderFilteredChats();
+}
+
+function renderFilteredChats() {
+    const historyBox = document.getElementById("history");
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+    const modelFilter = document.getElementById("modelFilter").value;
+    const sortOrder = document.getElementById("sortOrder").value;
+
+    if (allChats.length === 0) {
+        historyBox.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">💬</div>
+                <h3>No chat history yet</h3>
+                <p>Your local chat history is empty. Start a conversation on the chat page!</p>
+                <a href="/" class="nav-btn">Start Chatting</a>
+            </div>
+        `;
+        document.getElementById("displayedCount").innerText = "0";
+        return;
+    }
+
+    // Filter
+    let filtered = allChats.filter(chat => {
+        // Model filter
+        if (modelFilter !== "all") {
+            const m = (chat.model || "").toLowerCase();
+            if (modelFilter === "phi3" && !m.includes("phi")) return false;
+            if (modelFilter === "llama3.2:3b" && !m.includes("llama")) return false;
+            if (modelFilter === "other" && (m.includes("phi") || m.includes("llama"))) return false;
+        }
+
+        // Search query (search user_message and ai_response)
+        if (query) {
+            const prompt = (chat.user_message || "").toLowerCase();
+            const response = (chat.ai_response || "").toLowerCase();
+            if (!prompt.includes(query) && !response.includes(query)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+        if (sortOrder === "oldest") {
+            return Number(a.id) - Number(b.id);
+        } else {
+            return Number(b.id) - Number(a.id);
+        }
+    });
+
+    document.getElementById("displayedCount").innerText = filtered.length;
+
+    if (filtered.length === 0) {
+        historyBox.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3>No matching conversations found</h3>
+                <p>No chat records match your current search query or filter selection.</p>
+                <button type="button" class="nav-btn" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        `;
+        return;
+    }
+
+    // Render cards
+    let html = "";
+    filtered.forEach(chat => {
+        const modelName = chat.model || "Unknown / Legacy";
+        const modelLower = modelName.toLowerCase();
+        const modelClass = modelLower.includes("phi")
+            ? "model-phi3"
+            : modelLower.includes("llama")
+            ? "model-llama"
+            : "model-na";
+
+        const promptText = escapeHtml(chat.user_message || "");
+        const rawResponse = chat.ai_response || "";
+        const formattedResponse = formatResponseText(rawResponse);
+        const timeDisplay = chat.created_at ? escapeHtml(chat.created_at) : "N/A";
+
+        html += `
+            <div class="chat-card" id="card-${Number(chat.id)}">
+                <div class="card-top">
+                    <span class="model-badge ${modelClass}">
+                        🤖 ${escapeHtml(modelName)}
+                    </span>
+                    <span class="time-badge">
+                        🕒 ${timeDisplay}
+                    </span>
+                </div>
+
+                <!-- Distinct User Prompt Section -->
+                <div class="prompt-container">
+                    <div class="prompt-header">
+                        👤 User Prompt
+                    </div>
+                    <div class="prompt-text">${promptText}</div>
+                </div>
+
+                <!-- Distinct AI Response Section -->
+                <div class="response-container">
+                    <div class="response-header">
+                        <span>🤖 AI Response</span>
+                        <button type="button" class="copy-card-btn" onclick="copyText(this, this.closest('.response-container').querySelector('.raw-resp-holder').value)">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <div class="response-text">${formattedResponse}</div>
+                    <textarea class="raw-resp-holder" style="display: none;">${escapeHtml(rawResponse)}</textarea>
+                </div>
+
+                <!-- Response Metadata -->
+                <div class="metadata-row">
+                    <div class="meta-chip">
+                        <span class="meta-label">⏱️ Response Time:</span>
+                        <span class="meta-val">${formatMetric(chat.response_time, " sec")}</span>
+                    </div>
+
+                    <div class="meta-chip">
+                        <span class="meta-label">📝 Response Length:</span>
+                        <span class="meta-val">${formatMetric(chat.response_length, " chars")}</span>
+                    </div>
+
+                    <div class="meta-chip">
+                        <span class="meta-label">🔢 Tokens:</span>
+                        <span class="meta-val">${formatTokens(chat.token_count)}</span>
+                    </div>
+
+                    <div class="meta-chip" title="Algorithmic heuristic score (0-100) based on keyword overlap and response length. Does NOT measure true factual accuracy.">
+                        <span class="meta-label">⭐ Heuristic Quality Score:</span>
+                        <span class="meta-val">${formatQuality(chat.quality_score)}</span>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    <button class="delete-btn" type="button" onclick="confirmDeleteChat(${Number(chat.id)})">
+                        🗑️ Delete Conversation
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    historyBox.innerHTML = html;
+}
+
+// Delete conversation with confirmation
+async function confirmDeleteChat(chatId) {
+    const targetChat = allChats.find(c => Number(c.id) === Number(chatId));
+    let promptSummary = targetChat ? targetChat.user_message : `ID ${chatId}`;
+    if (promptSummary.length > 60) {
+        promptSummary = promptSummary.substring(0, 57) + "...";
+    }
+
+    const confirmed = confirm(
+        `Are you sure you want to permanently delete this chat from history?\n\n"${promptSummary}"\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/delete-chat/${chatId}`, {
+            method: "DELETE"
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Remove locally from state
+            allChats = allChats.filter(c => Number(c.id) !== Number(chatId));
+            document.getElementById("totalCount").innerText = allChats.length;
+            renderFilteredChats();
+        } else {
+            alert(result.message || "Failed to delete chat.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error communicating with server while deleting chat.");
+    }
+}
+
+// Initial load
+loadHistory();
+
+</script>
+
+</body>
+</html>
